@@ -15,9 +15,9 @@ firebase.initializeApp({
 });
 
 const botsRef = firebase.database().ref('bots');
-const vmRef = firebase.database().ref('vm').child(config.vm_id);
+const vmRef = firebase.database().ref('vms').child(config.vm_id);
 
-// update last heartbeat timestamp on firebase
+// heartbeat every 5 seconds
 const heartbeatInterval = setInterval(() => {
   vmRef.update({
     status: 'online',
@@ -25,15 +25,15 @@ const heartbeatInterval = setInterval(() => {
   });
 }, 5000);
 
-// check for new bots
-vmRef.child('bots').on('child_added', ({ key }) => {
-  console.log('key', key);
+// listen for update on `/vms/<vm_id>/bots/`
+vmRef.child('bots').on('child_added', snapshot => handleBot(snapshot.key));
+vmRef.child('bots').on('child_changed', snapshot => handleBot(snapshot.key));
 
-  // get bot objet key
+function handleBot(key) {
   botsRef.child(key).once('value', snapshot => {
     const bot = snapshot.val();
 
-    console.log('checking if we should start', bot);
+    console.log(key, bot);
 
     if (bot.vm === config.vm_id && bot.status === 'waiting_for_vm') {
       // update bot.status to 'starting_bot'
@@ -45,7 +45,8 @@ vmRef.child('bots').on('child_added', ({ key }) => {
         stdio: 'ignore'
       });
 
+      // detached bot process
       child.unref();
     }
   });
-});
+}
