@@ -1,0 +1,23 @@
+{
+  "name": "botmon-vm",
+  "version": "0.0.0",
+  "description": "This script will start more bots process on the VMs",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matheussampaio/botmon-vm.git"
+  },
+  "author": "Matheus Sampaio <matheus1401@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/matheussampaio/botmon-vm/issues"
+  },
+  "homepage": "https://github.com/matheussampaio/botmon-vm#readme",
+  "dependencies": {
+    "firebase": "3.2.1",
+    "python-shell": "0.4.0"
+  }
+}
