@@ -26,7 +26,9 @@ function init() {
     .limitToFirst(1)
     .once('value', snapshot => {
       if (snapshot) {
-        CONFIG_VM_ID = snapshot.key;
+        const vms = Object.keys(snapshot.val());
+
+        CONFIG_VM_ID = vms[0];
 
         return main();
       }
