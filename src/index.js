@@ -1,3 +1,5 @@
+process.env.TZ = 'utc';
+
 const path = require('path');
 const spawn = require('child_process').spawn;
 const firebase = require('firebase');
@@ -27,7 +29,7 @@ const heartbeatInterval = setInterval(() => {
   vmRef.once('value', snapshot => {
     vm = snapshot.val();
 
-    if (vm.status === 'shut_down') {
+    if (vm && vm.status === 'shut_down') {
       console.log(`shuting down vm ${CONFIG_VM_ID}`);
 
       vmRef.update({
@@ -60,7 +62,9 @@ function handleBot(key) {
       botsRef.child(key).update({ status: 'starting_bot' });
 
       // start bot process
-      const child = spawn('python', ['../bot/main.py', key], {
+      console.log('starting bot proccess', key);
+
+      const child = spawn('python', ['../botmon-bot/main.py', key], {
         detached: true,
         stdio: 'ignore'
       });
