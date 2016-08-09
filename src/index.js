@@ -4,28 +4,54 @@ const path = require('path');
 const spawn = require('child_process').spawn;
 const firebase = require('firebase');
 
-// Load config
-const config = require(path.join(__dirname, '../configs/config.json'));
+let botsRef = null;
+let vmRef = null;
+let CONFIG_VM_ID = null;
 
-const CONFIG_VM_ID = process.env.CONFIG_VM_ID || config.vm_id;
+init();
 
-if (!CONFIG_VM_ID) {
-  console.error('vm_id not found');
-  process.exit(1);
+function init() {
+  console.log('vm dir', __dirname);
+  console.log('initializing...');
+
+  firebase.initializeApp({
+    serviceAccount: path.join(__dirname, '../configs/meowth-config.json'),
+    databaseURL: 'https://meowth-aed86.firebaseio.com'
+  });
+
+  firebase.database()
+    .ref('vms')
+    .orderByChild('status')
+    .equalTo('starting')
+    .limitToFirst(1)
+    .once('value', snapshot => {
+      if (snapshot) {
+        CONFIG_VM_ID = snapshot.key;
+
+        return main();
+      }
+
+      console.error('vm_id not found');
+      process.exit(1);
+    });
 }
 
-console.log('vm dir', __dirname);
+function main() {
+  console.log('creating refs');
+  botsRef = firebase.database().ref('bots');
+  vmRef = firebase.database().ref('vms').child(CONFIG_VM_ID);
 
-firebase.initializeApp({
-  serviceAccount: path.join(__dirname, '../configs/meowth-config.json'),
-  databaseURL: 'https://meowth-aed86.firebaseio.com'
-});
+  // listen for update on `/vms/<vm_id>/bots/`
+  console.log('creating listeners');
+  vmRef.child('bots').on('child_added', snapshot => handleBot(snapshot.key));
+  vmRef.child('bots').on('child_changed', snapshot => handleBot(snapshot.key));
 
-const botsRef = firebase.database().ref('bots');
-const vmRef = firebase.database().ref('vms').child(CONFIG_VM_ID);
+  // heartbeat every 5 seconds
+  console.log('starting heartbeat');
+  setInterval(heartbeat, 5000);
+}
 
-// heartbeat every 5 seconds
-const heartbeatInterval = setInterval(() => {
+function heartbeat() {
   vmRef.once('value', snapshot => {
     vm = snapshot.val();
 
@@ -46,12 +72,7 @@ const heartbeatInterval = setInterval(() => {
       });
     }
   });
-
-}, 5000);
-
-// listen for update on `/vms/<vm_id>/bots/`
-vmRef.child('bots').on('child_added', snapshot => handleBot(snapshot.key));
-vmRef.child('bots').on('child_changed', snapshot => handleBot(snapshot.key));
+}
 
 function handleBot(key) {
   botsRef.child(key).once('value', snapshot => {
