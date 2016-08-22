@@ -25,7 +25,7 @@ function init() {
     .equalTo('starting')
     .limitToFirst(1)
     .once('value', snapshot => {
-      if (snapshot) {
+      if (snapshot && snapshot.val()) {
         const vms = Object.keys(snapshot.val());
 
         CONFIG_VM_ID = vms[0];
@@ -87,16 +87,18 @@ function handleBot(key) {
       // start bot process
       console.log('starting bot proccess', key);
 
-      const child = spawn('python', ['/botmon-bot/pokecli.py',
-        '-cf', 'configs/config.json',
-        '-bi', `"${key}"`
+      const child = spawn('torify', [
+        'python',
+        '../botmon-bot/pokecli.py',
+        `--config=../botmon-bot/configs/config.json`,
+        `--bot_id=${key}`
       ], {
-        detached: true,
-        stdio: 'ignore'
+       // detached: true,
+        stdio: 'inherit'
       });
 
       // detached bot process
-      child.unref();
+     // child.unref();
     }
   });
 }
