@@ -87,7 +87,10 @@ function handleBot(key) {
       // start bot process
       console.log('starting bot proccess', key);
 
-      const child = spawn('python', ['../botmon-bot/main.py', key], {
+      const child = spawn('python', ['/botmon-bot/pokecli.py',
+        '-cf', 'configs/config.json',
+        '-bi', `"${key}"`
+      ], {
         detached: true,
         stdio: 'ignore'
       });
